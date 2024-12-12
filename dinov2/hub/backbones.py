@@ -9,7 +9,8 @@ from typing import Union
 import torch
 
 from .utils import _DINOV2_BASE_URL, _make_dinov2_model_name
-
+from accelerate import init_empty_weights
+from contextlib import nullcontext
 
 class Weights(Enum):
     LVD142M = "LVD142M"
@@ -50,9 +51,14 @@ def _make_dinov2_model(
         interpolate_offset=interpolate_offset,
     )
     vit_kwargs.update(**kwargs)
-    model = vits.__dict__[arch_name](**vit_kwargs)
 
-    if pretrained:
+    if not pretrained:
+        model = vits.__dict__[arch_name](**vit_kwargs)
+    else:
+        with init_empty_weights():
+            model = vits.__dict__[arch_name](**vit_kwargs)
+        model.to_empty(device="cpu")
+
         model_full_name = _make_dinov2_model_name(arch_name, patch_size, num_register_tokens)
         url = _DINOV2_BASE_URL + f"/{model_base_name}/{model_full_name}_pretrain.pth"
         state_dict = torch.hub.load_state_dict_from_url(url, map_location="cpu")
