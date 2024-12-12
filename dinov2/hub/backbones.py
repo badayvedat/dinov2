@@ -10,7 +10,6 @@ import torch
 
 from .utils import _DINOV2_BASE_URL, _make_dinov2_model_name
 from accelerate import init_empty_weights
-from contextlib import nullcontext
 
 class Weights(Enum):
     LVD142M = "LVD142M"
